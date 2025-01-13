@@ -11,7 +11,7 @@ import {
   CircleXIcon,
 } from "lucide-vue-next";
 import { ref, onMounted, computed } from "vue";
-import { Editor } from "@tiptap/vue-3";
+import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 
 const isPinned = ref(false);
@@ -112,6 +112,10 @@ const togglePalette = () => {
   width: 100%;
   background: #f5e942;
   backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  scrollbar-width: none;
 }
 
 .left-icon,
@@ -139,6 +143,11 @@ const togglePalette = () => {
 
 .title-input::placeholder {
   color: #999;
+}
+
+.container {
+  padding: 4px 8px;
+  overscroll-behavior-y: contain;
 }
 
 .icon {
