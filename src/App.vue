@@ -176,7 +176,9 @@ const handleBlur = () => {
 const toggleClose =async () => {
   const answer = await ask('是否保存当前内容后关闭？', {
     title: '保存当前内容',
-    kind: 'warning',
+    type: 'warning',
+    okLabel: '保存',
+    cancelLabel: '不保存',
   });
   if (answer){
     await toggleSave();
