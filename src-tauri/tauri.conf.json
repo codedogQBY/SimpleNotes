@@ -52,6 +52,14 @@
         "setIgnoreCursorEvents": true,
         "startDragging": true,
         "print": true
+      },
+      "fs": {
+        "readFile": true,
+        "writeFile": true,
+        "readDir": true
+      },
+      "dialog": {
+        "all": true
       }
     },
     "bundle": {
@@ -76,7 +84,6 @@
       {
         "fullscreen": false,
         "resizable": true,
-        "title": "SimpleNotes",
         "width": 300,
         "height": 200,
         "minWidth": 270,

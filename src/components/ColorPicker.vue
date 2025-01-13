@@ -26,28 +26,13 @@
 
 <script setup>
 import { ref, defineProps, defineEmits } from "vue";
+import { defaultColorList } from "../config.js";
 
 const props = defineProps({
   modelValue: String,
   colors: {
     type: Array,
-    default: () => [
-      "#FF6B6B",
-      "#4ECDC4",
-      "#45B7D1",
-      "#FFA07A",
-      "#98D8C8",
-      "#F06292",
-      "#BA68C8",
-      "#FFD54F",
-      "#4DB6AC",
-      "#7986CB",
-      "#9CCC65",
-      "#FF8A65",
-      "#A1887F",
-      "#90A4AE",
-      "#DCE775",
-    ],
+    default: () => defaultColorList,
   },
   triggerOnHover: {
     type: Boolean,

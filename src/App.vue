@@ -10,22 +10,27 @@ import {
   CircleMinusIcon,
   CircleXIcon,
 } from "lucide-vue-next";
-import { ref, onMounted, computed, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
-import { appWindow, PhysicalSize } from "@tauri-apps/api/window";
+import { appWindow, LogicalSize, WebviewWindow } from "@tauri-apps/api/window";
 import ColorPicker from "./components/ColorPicker.vue";
+import { defaultColorList } from "./config.js";
+import { writeFile, BaseDirectory } from "@tauri-apps/api/fs";
+import { save, ask } from "@tauri-apps/api/dialog";
+import { Markdown } from 'tiptap-markdown';
 
 const containerRef = ref(null);
-const isPinned = ref(false);
+const isPinned = ref(true);
 const filePath = ref("");
 const isMaximized = ref(false);
 const isHiddenContent = ref(false);
-const selectedColor = ref("#4DB6AC");
+// 默认随机颜色
+const selectedColor = ref(defaultColorList.filter(() => Math.random() > 0.5)[0]);
 
 const editor = new Editor({
   content: "",
-  extensions: [StarterKit],
+  extensions: [StarterKit, Markdown],
   editorProps: {
     attributes: {
       style:
@@ -34,29 +39,111 @@ const editor = new Editor({
   },
 });
 
-const title = computed(() => {
-  return editor.getText({}).slice(0, 20);
+const title = ref("");
+
+editor.on("update", () => {
+  title.value = editor.getText({}).slice(0, 10);
+  appWindow.setTitle(title.value);
 });
+
+async function setAlwaysOnTop(alwaysOnTop) {
+  try {
+    // 将窗口固定到最高层
+    await appWindow.setAlwaysOnTop(alwaysOnTop);
+  } catch (error) {}
+}
 
 const togglePin = () => {
   isPinned.value = !isPinned.value;
+  setAlwaysOnTop(isPinned.value);
 };
 
 const toggleMaximize = () => {
   isMaximized.value = !isMaximized.value;
-  document.body.style.overflow = isMaximized.value ? "hidden" : "";
+  appWindow.setFullscreen(isMaximized.value);
 };
 
-const toggleHiddenContent = () => {
+// 保存原始窗口大小
+const originalSize = ref({
+  width: 300,
+  height: 200,
+});
+const toggleHiddenContent =async () => {
   isHiddenContent.value = !isHiddenContent.value;
+  if (isHiddenContent.value) {
+    const {
+      width,
+      height
+    } = await appWindow.outerSize();
+    originalSize.value = {
+      width,
+      height
+    };
+    await appWindow.setSize(new LogicalSize(width, 24));
+  } else {
+    await appWindow.setSize(new LogicalSize(originalSize.value.width, originalSize.value.height));
+  }
 };
 
-const toggleSave = () => {
-  // 保存逻辑
+const saveFile= async(path) => {
+  try {
+    if (path) {
+      const markdownOutput = editor.storage.markdown.getMarkdown();
+      await writeFile(path, markdownOutput, {
+        dir: BaseDirectory.Document,
+        append: true,
+      });
+    }
+  } catch (error) {
+    console.error(error);
+  }
 };
 
-const togglePalette = () => {
-  // 切换主题逻辑
+const toggleSave =async () => {
+  try {
+    if (!filePath.value) {
+      const result = await save({
+        defaultPath: `${title.value}.md`,
+        filters: [{
+          name: "Markdown",
+          extensions: ["md"],
+        }],
+      });
+      if (result) {
+        filePath.value = result;
+        await saveFile(result);
+      }
+    } else {
+      await saveFile(filePath.value);
+    }
+  }catch (error) {
+    console.error(error);
+  }
+};
+
+
+const createNewNote =async () => {
+  // 生成16位随机数
+  const randomId = Math.random().toString(16).slice(2, 8).toString();
+
+  // 新窗口初始位置在当前窗口的右下角（30，30）处
+  const {
+    x,
+    y
+  } = await appWindow.outerPosition()
+
+  const newWindow = new WebviewWindow(randomId,{
+    url: "/", // 可以是本地文件或远程 URL
+    "fullscreen": false,
+    "resizable": true,
+    "width": 300,
+    "height": 200,
+    "minWidth": 270,
+    "minHeight": 24,
+    "decorations": false,
+    "x": x + 30,
+    "y": y + 30,
+  });
 };
 
 // 将透明度添加到十六进制颜色中
@@ -86,12 +173,24 @@ const handleBlur = () => {
   editor.commands.blur();
 };
 
+const toggleClose =async () => {
+  const answer = await ask('是否保存当前内容后关闭？', {
+    title: '保存当前内容',
+    kind: 'warning',
+  });
+  if (answer){
+    await toggleSave();
+  }
+  await appWindow.close();
+};
+
 const unListen = ref(null);
 
 onMounted(() => {
   appWindow.listen("blur", handleBlur).then((listener) => {
     unListen.value = listener;
   });
+  setAlwaysOnTop(isPinned.value);
 });
 
 onUnmounted(() => {
@@ -129,7 +228,7 @@ onUnmounted(() => {
         </ColorPicker>
 
         <div class="icon">
-          <CirclePlusIcon size="14" />
+          <CirclePlusIcon size="14" @click="createNewNote" />
         </div>
         <div class="icon">
           <SaveIcon size="14" @click="toggleSave" />
@@ -146,10 +245,10 @@ onUnmounted(() => {
           <MaximizeIcon size="14" @click="toggleMaximize" />
         </div>
         <div class="icon">
-          <CircleMinusIcon size="14" />
+          <CircleMinusIcon size="14"  @click="appWindow.minimize()" />
         </div>
         <div class="icon">
-          <CircleXIcon size="14" />
+          <CircleXIcon size="14" @click="toggleClose" />
         </div>
       </div>
     </header>
@@ -188,13 +287,12 @@ onUnmounted(() => {
 }
 
 .title-input {
-  margin-left: 8px;
-  padding: 4px 0;
+  margin-left: 4px;
   border: none;
   font-size: 12px;
   color: #333;
   background: transparent;
-  min-width: 80px;
+  width: 80px;
   user-select: none;
   white-space: nowrap;
   overflow: hidden;
