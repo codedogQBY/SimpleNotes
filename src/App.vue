@@ -21,17 +21,21 @@ const isPinned = ref(false);
 const filePath = ref("");
 const isMaximized = ref(false);
 const isHiddenContent = ref(false);
-const title = ref("title");
 const selectedColor = ref("#4DB6AC");
 
 const editor = new Editor({
-  content: "<p>tiptap</p>",
+  content: "",
   extensions: [StarterKit],
   editorProps: {
     attributes: {
-      style: "height: 100%; font-size: 14px",
+      style:
+        "height: calc(100vh - 32px); font-size: 14px;outline: none; overflow-y: auto;",
     },
   },
+});
+
+const title = computed(() => {
+  return editor.getText({}).slice(0, 20);
 });
 
 const togglePin = () => {
@@ -78,27 +82,22 @@ function addTransparencyToHexColor(hexColor, transparency) {
   return `#${hexColor}${alpha}`;
 }
 
-// 监听窗口大小变化
-async function adjustWindowSize() {
-  if (!containerRef.value) return;
+const handleBlur = () => {
+  editor.commands.blur();
+};
 
-  const headerHeight = 24; // header 的高度
-  const containerHeight = containerRef.value.offsetHeight;
-  const newHeight = headerHeight + containerHeight;
-  await appWindow.setSize(new PhysicalSize(window.innerWidth, newHeight));
-}
+const unListen = ref(null);
 
 onMounted(() => {
-  adjustWindowSize();
-  window.addEventListener("resize", adjustWindowSize);
+  appWindow.listen("blur", handleBlur).then((listener) => {
+    unListen.value = listener;
+  });
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", adjustWindowSize);
-});
-
-editor.on("update", () => {
-  adjustWindowSize();
+  if (unListen.value) {
+    unListen.value();
+  }
 });
 </script>
 
@@ -135,13 +134,9 @@ editor.on("update", () => {
         <div class="icon">
           <SaveIcon size="14" @click="toggleSave" />
         </div>
-        <input
-          v-if="isHiddenContent"
-          v-model="title"
-          class="title-input"
-          type="text"
-          placeholder="title"
-        />
+        <div data-tauri-drag-region v-if="isHiddenContent" class="title-input">
+          {{ title }}
+        </div>
       </div>
       <div class="right-icon">
         <div class="icon">
@@ -194,29 +189,23 @@ editor.on("update", () => {
 
 .title-input {
   margin-left: 8px;
-  padding: 4px 8px;
+  padding: 4px 0;
   border: none;
-  border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   color: #333;
   background: transparent;
-  width: 80px;
-}
-
-.title-input:focus {
-  outline: none;
-  background: rgba(0, 0, 0, 0.05);
-}
-
-.title-input::placeholder {
-  color: #999;
+  min-width: 80px;
+  user-select: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
 }
 
 .container {
   padding: 4px 8px;
   overscroll-behavior-y: contain;
   height: calc(100vh - 32px);
-  overflow-y: auto;
 }
 
 .icon {
