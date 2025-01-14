@@ -1,6 +1,6 @@
 [package]
 name = "SimpleNotes"
-version = "0.0.1"
+version = "0.0.2"
 description = "一个简单的便签应用"
 authors = ["you"]
 license = ""
@@ -13,7 +13,7 @@ edition = "2021"
 tauri-build = { version = "1.2", features = [] }
 
 [dependencies]
-tauri = { version = "1.2", features = [ "dialog-all", "fs-read-dir", "fs-read-file", "fs-write-file", "window-all", "shell-open", "devtools"] }
+tauri = { version = "1.2", features = [ "dialog-all", "fs-read-dir", "fs-read-file", "fs-write-file", "window-all", "shell-open"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 

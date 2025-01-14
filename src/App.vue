@@ -10,7 +10,7 @@ import {
   CircleMinusIcon,
   CircleXIcon,
 } from "lucide-vue-next";
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, watch } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
 import {
@@ -40,7 +40,7 @@ const editor = new Editor({
   editorProps: {
     attributes: {
       style:
-        "height: calc(100vh - 32px); font-size: 14px;outline: none; overflow-y: auto; z-index: 1 !important; position: relative;",
+        "height: calc(100vh - 32px); font-size: 14px;outline: none; overflow-y: auto;",
     },
   },
 });
@@ -193,6 +193,22 @@ const toggleClose = async () => {
   await appWindow.close();
 };
 
+// 修复打包后无法换肤的问题
+const toggleOpenColorPicker = (isOpen) => {
+  const editorContainer = document.getElementById("editor-container");
+  if (isOpen) {
+    editorContainer.style.zIndex = '-1';
+  }else {
+    editorContainer.style.zIndex = '1';
+  }
+};
+
+// 修复打包后无法换肤的问题
+watch(selectedColor, () => {
+  const editorContainer = document.getElementById("editor-container");
+  editorContainer.style.zIndex = '1';
+});
+
 const unListen = ref(null);
 
 onMounted(() => {
@@ -228,7 +244,7 @@ onUnmounted(() => {
           </div>
         </template>
 
-        <ColorPicker v-model="selectedColor">
+        <ColorPicker v-model="selectedColor" @open="toggleOpenColorPicker">
           <template #trigger>
             <div class="icon">
               <PaletteIcon size="14" />
@@ -267,6 +283,7 @@ onUnmounted(() => {
     </header>
     <main
       class="container"
+      id="editor-container"
       v-show="!isHiddenContent"
       :style="{
         backgroundColor: addTransparencyToHexColor(selectedColor, 0.6),
@@ -317,6 +334,7 @@ onUnmounted(() => {
   padding: 4px 8px;
   overscroll-behavior-y: contain;
   height: calc(100vh - 32px);
+  position: relative;
 }
 
 .icon {

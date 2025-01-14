@@ -46,17 +46,20 @@ const isOpen = ref(false);
 
 const togglePicker = () => {
   isOpen.value = !isOpen.value;
+  emit("open", isOpen.value)
 };
 
 const openOnHover = () => {
   if (props.triggerOnHover) {
     isOpen.value = true;
+    emit("open", true)
   }
 };
 
 const closeOnHover = () => {
   if (props.triggerOnHover) {
     isOpen.value = false;
+    emit("open", false)
   }
 };
 
