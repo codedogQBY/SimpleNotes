@@ -13,7 +13,12 @@ import {
 import { ref, onMounted, onUnmounted } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
-import { appWindow, WebviewWindow, PhysicalSize } from "@tauri-apps/api/window";
+import {
+  appWindow,
+  WebviewWindow,
+  LogicalSize,
+  currentMonitor,
+} from "@tauri-apps/api/window";
 import ColorPicker from "./components/ColorPicker.vue";
 import { defaultColorList } from "./config.js";
 import { writeFile, BaseDirectory } from "@tauri-apps/api/fs";
@@ -76,13 +81,13 @@ const toggleHiddenContent = async () => {
   if (isHiddenContent.value) {
     const { width, height } = await appWindow.outerSize();
     originalSize.value = {
-      width,
-      height,
+      width: width / factor,
+      height: height / factor,
     };
-    await appWindow.setSize(new PhysicalSize(width, 24 * factor));
+    await appWindow.setSize(new LogicalSize(width / factor, 24));
   } else {
     await appWindow.setSize(
-      new PhysicalSize(originalSize.value.width, originalSize.value.height)
+      new LogicalSize(originalSize.value.width, originalSize.value.height)
     );
   }
 };
@@ -133,7 +138,6 @@ const createNewNote = async () => {
 
   // 新窗口初始位置在当前窗口的右下角（30，30）处
   const { x, y } = await appWindow.innerPosition();
-  console.log(x, y);
 
   const newWindow = new WebviewWindow(randomId, {
     url: "/", // 可以是本地文件或远程 URL
