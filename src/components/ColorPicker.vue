@@ -99,7 +99,7 @@ const selectColor = (color) => {
   border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  z-index: 1001;
+  z-index: 9999999999;
 }
 
 .color-grid {
