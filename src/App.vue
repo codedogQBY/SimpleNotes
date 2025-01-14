@@ -13,12 +13,12 @@ import {
 import { ref, onMounted, onUnmounted } from "vue";
 import { Editor, EditorContent } from "@tiptap/vue-3";
 import StarterKit from "@tiptap/starter-kit";
-import { appWindow, LogicalSize, WebviewWindow } from "@tauri-apps/api/window";
+import { appWindow, WebviewWindow, PhysicalSize } from "@tauri-apps/api/window";
 import ColorPicker from "./components/ColorPicker.vue";
 import { defaultColorList } from "./config.js";
 import { writeFile, BaseDirectory } from "@tauri-apps/api/fs";
 import { save, ask } from "@tauri-apps/api/dialog";
-import { Markdown } from 'tiptap-markdown';
+import { Markdown } from "tiptap-markdown";
 
 const containerRef = ref(null);
 const isPinned = ref(true);
@@ -26,7 +26,9 @@ const filePath = ref("");
 const isMaximized = ref(false);
 const isHiddenContent = ref(false);
 // 默认随机颜色
-const selectedColor = ref(defaultColorList.filter(() => Math.random() > 0.5)[0]);
+const selectedColor = ref(
+  defaultColorList.filter(() => Math.random() > 0.5)[0]
+);
 
 const editor = new Editor({
   content: "",
@@ -68,24 +70,25 @@ const originalSize = ref({
   width: 300,
   height: 200,
 });
-const toggleHiddenContent =async () => {
+
+const toggleHiddenContent = async () => {
   isHiddenContent.value = !isHiddenContent.value;
+  const factor = await appWindow.scaleFactor();
   if (isHiddenContent.value) {
-    const {
-      width,
-      height
-    } = await appWindow.outerSize();
+    const { width, height } = await appWindow.outerSize();
     originalSize.value = {
       width,
-      height
+      height,
     };
-    await appWindow.setSize(new LogicalSize(width, 24));
+    await appWindow.setSize(new PhysicalSize(width, 24 * factor));
   } else {
-    await appWindow.setSize(new LogicalSize(originalSize.value.width, originalSize.value.height));
+    await appWindow.setSize(
+      new PhysicalSize(originalSize.value.width, originalSize.value.height)
+    );
   }
 };
 
-const saveFile= async(path) => {
+const saveFile = async (path) => {
   try {
     if (path) {
       const markdownOutput = editor.storage.markdown.getMarkdown();
@@ -99,15 +102,17 @@ const saveFile= async(path) => {
   }
 };
 
-const toggleSave =async () => {
+const toggleSave = async () => {
   try {
     if (!filePath.value) {
       const result = await save({
         defaultPath: `${title.value}.md`,
-        filters: [{
-          name: "Markdown",
-          extensions: ["md"],
-        }],
+        filters: [
+          {
+            name: "Markdown",
+            extensions: ["md"],
+          },
+        ],
       });
       if (result) {
         filePath.value = result;
@@ -116,33 +121,29 @@ const toggleSave =async () => {
     } else {
       await saveFile(filePath.value);
     }
-  }catch (error) {
+  } catch (error) {
     console.error(error);
   }
 };
 
-
-const createNewNote =async () => {
+const createNewNote = async () => {
   // 生成16位随机数
   const randomId = Math.random().toString(16).slice(2, 8).toString();
 
   // 新窗口初始位置在当前窗口的右下角（30，30）处
-  const {
-    x,
-    y
-  } = await appWindow.outerPosition()
+  const { x, y } = await appWindow.outerPosition();
 
-  const newWindow = new WebviewWindow(randomId,{
+  const newWindow = new WebviewWindow(randomId, {
     url: "/", // 可以是本地文件或远程 URL
-    "fullscreen": false,
-    "resizable": true,
-    "width": 300,
-    "height": 200,
-    "minWidth": 270,
-    "minHeight": 24,
-    "decorations": false,
-    "x": x + 30,
-    "y": y + 30,
+    fullscreen: false,
+    resizable: true,
+    width: 300,
+    height: 200,
+    minWidth: 270,
+    minHeight: 24,
+    decorations: false,
+    x: x + 30,
+    y: y + 30,
   });
 };
 
@@ -173,14 +174,14 @@ const handleBlur = () => {
   editor.commands.blur();
 };
 
-const toggleClose =async () => {
-  const answer = await ask('是否保存当前内容后关闭？', {
-    title: '保存当前内容',
-    type: 'warning',
-    okLabel: '保存',
-    cancelLabel: '不保存',
+const toggleClose = async () => {
+  const answer = await ask("是否保存当前内容后关闭？", {
+    title: "保存当前内容",
+    type: "warning",
+    okLabel: "保存",
+    cancelLabel: "不保存",
   });
-  if (answer){
+  if (answer) {
     await toggleSave();
   }
   await appWindow.close();
@@ -247,7 +248,7 @@ onUnmounted(() => {
           <MaximizeIcon size="14" @click="toggleMaximize" />
         </div>
         <div class="icon">
-          <CircleMinusIcon size="14"  @click="appWindow.minimize()" />
+          <CircleMinusIcon size="14" @click="appWindow.minimize()" />
         </div>
         <div class="icon">
           <CircleXIcon size="14" @click="toggleClose" />
