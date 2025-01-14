@@ -99,7 +99,7 @@ const selectColor = (color) => {
   border-radius: var(--border-radius);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   overflow: hidden;
-  z-index: 9999999999;
+  z-index: 1000;
 }
 
 .color-grid {
@@ -121,7 +121,7 @@ const selectColor = (color) => {
 
 .color-option:hover {
   transform: scale(1.1);
-  z-index: 1;
+  z-index: 1000;
 }
 
 .fade-enter-active,

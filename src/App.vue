@@ -307,6 +307,7 @@ onUnmounted(() => {
   padding: 4px 8px;
   overscroll-behavior-y: contain;
   height: calc(100vh - 32px);
+  position: relative;
 }
 
 .icon {
