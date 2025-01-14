@@ -19,6 +19,7 @@ import { defaultColorList } from "./config.js";
 import { writeFile, BaseDirectory } from "@tauri-apps/api/fs";
 import { save, ask } from "@tauri-apps/api/dialog";
 import { Markdown } from "tiptap-markdown";
+import PickColors from "vue-pick-colors";
 
 const isPinned = ref(true);
 const filePath = ref("");
@@ -129,8 +130,11 @@ const createNewNote = async () => {
   // 生成16位随机数
   const randomId = Math.random().toString(16).slice(2, 8).toString();
 
+  const factor = await appWindow.scaleFactor();
+
   // 新窗口初始位置在当前窗口的右下角（30，30）处
-  const { x, y } = await appWindow.outerPosition();
+  const { x, y } = await appWindow.innerPosition();
+  console.log(x, y);
 
   const newWindow = new WebviewWindow(randomId, {
     url: "/", // 可以是本地文件或远程 URL
@@ -141,8 +145,8 @@ const createNewNote = async () => {
     minWidth: 270,
     minHeight: 24,
     decorations: false,
-    x: x + 30,
-    y: y + 30,
+    x: x / factor + 30,
+    y: y / factor + 30,
   });
 };
 
