@@ -19,7 +19,6 @@ import { defaultColorList } from "./config.js";
 import { writeFile, BaseDirectory } from "@tauri-apps/api/fs";
 import { save, ask } from "@tauri-apps/api/dialog";
 import { Markdown } from "tiptap-markdown";
-import PickColors from "vue-pick-colors";
 
 const isPinned = ref(true);
 const filePath = ref("");
