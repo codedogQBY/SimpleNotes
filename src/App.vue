@@ -20,7 +20,6 @@ import { writeFile, BaseDirectory } from "@tauri-apps/api/fs";
 import { save, ask } from "@tauri-apps/api/dialog";
 import { Markdown } from "tiptap-markdown";
 
-const containerRef = ref(null);
 const isPinned = ref(true);
 const filePath = ref("");
 const isMaximized = ref(false);
@@ -36,7 +35,7 @@ const editor = new Editor({
   editorProps: {
     attributes: {
       style:
-        "height: calc(100vh - 32px); font-size: 14px;outline: none; overflow-y: auto;",
+        "height: calc(100vh - 32px); font-size: 14px;outline: none; overflow-y: auto; z-index: 1 !important; position: relative;",
     },
   },
 });
@@ -236,7 +235,11 @@ onUnmounted(() => {
         <div class="icon">
           <SaveIcon size="14" @click="toggleSave" />
         </div>
-        <div data-tauri-drag-region v-if="isHiddenContent" class="title-input">
+        <div
+          data-tauri-drag-region
+          v-if="isHiddenContent && title"
+          class="title-input"
+        >
           {{ title }}
         </div>
       </div>
@@ -258,12 +261,11 @@ onUnmounted(() => {
     <main
       class="container"
       v-show="!isHiddenContent"
-      ref="containerRef"
       :style="{
         backgroundColor: addTransparencyToHexColor(selectedColor, 0.6),
       }"
     >
-      <editor-content :editor="editor" class="editor-content" />
+      <editor-content :editor="editor" />
     </main>
   </div>
 </template>
@@ -296,6 +298,7 @@ onUnmounted(() => {
   color: #333;
   background: transparent;
   width: 80px;
+  min-width: 80px;
   user-select: none;
   white-space: nowrap;
   overflow: hidden;
@@ -307,7 +310,6 @@ onUnmounted(() => {
   padding: 4px 8px;
   overscroll-behavior-y: contain;
   height: calc(100vh - 32px);
-  position: relative;
 }
 
 .icon {

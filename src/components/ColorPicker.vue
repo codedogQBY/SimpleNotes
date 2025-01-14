@@ -110,6 +110,7 @@ const selectColor = (color) => {
   padding: 8px;
   width: 64px;
   height: 64px;
+  z-index: 999 !important;
 }
 
 .color-option {
@@ -117,11 +118,11 @@ const selectColor = (color) => {
   border-radius: 4px;
   cursor: pointer;
   transition: transform var(--transition-speed);
+  z-index: 999 !important;
 }
 
 .color-option:hover {
   transform: scale(1.1);
-  z-index: 1000;
 }
 
 .fade-enter-active,
